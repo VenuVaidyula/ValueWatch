@@ -2,7 +2,7 @@
 
 A Chrome extension (Manifest V3) that watches a chosen element on a webpage and alerts you the moment its text value changes. When a change is detected, Value Watch fires a page banner, an OS notification, a beep, and a toolbar badge — so you don't have to keep the tab in focus.
 
-It was built for monitoring live counters that update in place — for example, the **Waiting Tasks** cell for a queue in Twilio Flex — but it works on any page where the element you care about can be pinned down with a CSS selector.
+It was built for monitoring live counters that update in place - for example, the **Waiting Tasks** cell for a queue in Twilio Flex — but it works on any page where the element you care about can be pinned down with a CSS selector.
 
 ## Features
 
