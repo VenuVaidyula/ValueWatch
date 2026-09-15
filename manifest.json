@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "Value Watch",
+  "version": "1.0.0",
+  "description": "Alert when a chosen text value on a page changes.",
+  "permissions": ["storage", "notifications", "offscreen"],
+  "host_permissions": ["<all_urls>"],
+  "background": { "service_worker": "background.js" },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": { "default_popup": "popup.html" },
+  "icons": {
+    "128": "icon128.png"
+  }
+}
