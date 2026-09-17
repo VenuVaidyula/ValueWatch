@@ -31,30 +31,73 @@ let audio = null;
 
 
 // ---------------------------------------------------------------------------
-// Synthesize the siren as a WAV blob
+// Synthesize the alert chime as a WAV blob
 // ---------------------------------------------------------------------------
 // A WAV file = 44-byte header + raw PCM samples. We build both from scratch
 // so we don't need to ship an audio asset in the extension bundle. The
-// samples describe a 0.5-second sound: 800 Hz for the first quarter, then
-// 1200 Hz — an alternating two-tone siren pattern when looped.
+// samples describe a gentle two-note "doorbell" chime:
+//
+//   • Note 1: A5 (880 Hz) sine wave, 0.5s, exponential decay envelope
+//   • Note 2: E5 (659 Hz) sine wave, 0.5s, exponential decay envelope
+//   • Silent gap: 0.3s tail before the audio element loops back
+//
+// Pure sine waves (rather than the earlier square wave) sound rounded and
+// non-piercing. The exponential envelope makes each note feel like a struck
+// bell rather than a raw tone. Overall amplitude is capped at 50% to keep
+// the loudness moderate without needing users to adjust system volume.
 
-function generateSirenWavBlob() {
+function generateChimeWavBlob() {
   const sampleRate = 44100;        // CD-quality sample rate (Hz)
-  const duration = 0.5;            // total length in seconds
-  const numSamples = Math.floor(sampleRate * duration);
 
-  // 16-bit signed PCM samples. Int16 max is 32767; scale by 0.85 to leave
-  // a bit of headroom so playback doesn't clip on any hardware.
+  const noteDuration = 0.5;        // seconds per note
+  const gapDuration  = 0.3;        // silent tail before the loop restarts
+  const totalDuration = 2 * noteDuration + gapDuration;
+  const numSamples = Math.floor(sampleRate * totalDuration);
+
+  // 16-bit signed PCM samples. Int16 max is 32767; scale by 0.5 to keep
+  // the chime deliberately quieter than the previous siren.
   const samples = new Int16Array(numSamples);
-  const amplitude = Math.round(0.85 * 32767);
+  const peakAmplitude = 0.5 * 32767;
 
-  // Generate the waveform. `Math.sign(sin(...))` produces a square wave
-  // (a much harsher, more attention-grabbing sound than a pure sine).
+  // Musical notes (descending doorbell feel).
+  const NOTE_1_HZ = 880;   // A5
+  const NOTE_2_HZ = 659;   // E5
+
+  // Envelope shape: fast linear attack, then exponential decay.
+  //   • attackSec — how quickly the note ramps up from silence to full
+  //     amplitude. Very short (10 ms) so the strike feels crisp, but not
+  //     zero (a zero-duration attack causes an audible click).
+  //   • decayTau  — the exponential decay time constant. Larger = the note
+  //     rings longer before fading out.
+  const attackSec = 0.01;
+  const decayTau  = 0.18;
+
+  // envelope(t) → amplitude multiplier in [0, 1] for time `t` into a note.
+  const envelope = (t) => {
+    if (t < attackSec) return t / attackSec;                 // linear rise
+    return Math.exp(-(t - attackSec) / decayTau);            // exponential fall
+  };
+
+  // Generate one sample at a time. Anything past the two notes stays at
+  // zero, producing the silent gap.
   for (let i = 0; i < numSamples; i++) {
     const t = i / sampleRate;
-    const freq = t < 0.25 ? 800 : 1200;  // switch tone halfway through
-    const wave = Math.sign(Math.sin(2 * Math.PI * freq * t));
-    samples[i] = wave * amplitude;
+    let sampleValue = 0;
+
+    if (t < noteDuration) {
+      // First note (A5)
+      const localT = t;
+      const env = envelope(localT);
+      sampleValue = Math.sin(2 * Math.PI * NOTE_1_HZ * localT) * env * peakAmplitude;
+    } else if (t < 2 * noteDuration) {
+      // Second note (E5)
+      const localT = t - noteDuration;
+      const env = envelope(localT);
+      sampleValue = Math.sin(2 * Math.PI * NOTE_2_HZ * localT) * env * peakAmplitude;
+    }
+    // else: silent gap — sampleValue stays 0.
+
+    samples[i] = Math.round(sampleValue);
   }
 
   // Build the WAV container. See http://soundfile.sapp.org/doc/WaveFormat/
@@ -95,11 +138,11 @@ function generateSirenWavBlob() {
 // ---------------------------------------------------------------------------
 
 // Lazy-init the audio element on first play. We generate the WAV, wrap it
-// in a blob URL, and hand it to <audio>. Loop mode makes the half-second
-// clip play indefinitely until we pause it.
+// in a blob URL, and hand it to <audio>. Loop mode makes the ~1.3-second
+// chime clip play indefinitely until we pause it.
 function ensureAudio() {
   if (audio) return audio;
-  const blob = generateSirenWavBlob();
+  const blob = generateChimeWavBlob();
   audio = new Audio(URL.createObjectURL(blob));
   audio.loop = true;
   audio.volume = 1.0;
