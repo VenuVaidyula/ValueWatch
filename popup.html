@@ -1,4 +1,14 @@
 <!doctype html>
+<!--
+  popup.html — The extension's toolbar popup UI
+
+  Chrome opens this page in a small floating window when the user clicks the
+  extension icon. The window is destroyed when the user clicks away, so any
+  state has to come from chrome.storage.local (see popup.js).
+
+  Content Security Policy note: MV3 forbids inline scripts and event
+  handlers. All logic lives in popup.js, which is loaded via <script src>.
+-->
 <html>
   <head>
     <meta charset="utf-8">
@@ -6,18 +16,40 @@
   </head>
   <body>
     <h1>Value Watch</h1>
+
+    <!--
+      Alert bar — hidden by default (the `hidden` attribute).
+      popup.js shows it whenever alertActive is true in storage.
+    -->
     <div id="alert-bar" hidden>
       <div class="alert-text">Alert active</div>
       <button id="stop-alert" type="button">Stop alert</button>
     </div>
+
+    <!--
+      Test-alert button — fires a synthetic alert so the user can
+      verify their OS notification and audio permissions.
+    -->
     <button id="test-alert" type="button" class="test-btn">Test alert sound</button>
+
+    <!--
+      Add-watch form — three required inputs:
+        • Label     — a human-readable name for the watch
+        • URL       — where the watch applies (`*` = wildcard)
+        • Selector  — CSS selector for the element to watch
+      Submit is handled in popup.js; nothing here is inline.
+    -->
     <form id="add-form">
       <input type="text" id="label" placeholder="Label (e.g., Voice waiting tasks)" required>
       <input type="text" id="urlPattern" placeholder="URL — use * as wildcard" required>
       <input type="text" id="selector" placeholder="CSS selector" required>
       <button type="submit">Add watch</button>
     </form>
+
+    <!-- The current list of watches. Populated by popup.js on load. -->
     <ul id="watch-list"></ul>
+
+    <!-- All logic lives here. Same-origin only; no remote scripts. -->
     <script src="popup.js"></script>
   </body>
 </html>

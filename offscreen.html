@@ -1,4 +1,16 @@
 <!doctype html>
+<!--
+  offscreen.html — Hidden document hosted by Chrome for audio playback
+
+  MV3 service workers cannot use <audio> or the Web Audio API. Chrome's
+  workaround is the "offscreen document": a headless page created by the
+  service worker (see background.js → ensureOffscreen) whose sole job in
+  this extension is to play a siren sound on command.
+
+  The page has no visible UI — it's purely a script host. All logic is
+  in offscreen.js, which generates a WAV in memory and plays it via a
+  looping <audio> element controlled by messages from background.js.
+-->
 <html>
   <head><meta charset="utf-8"></head>
   <body><script src="offscreen.js"></script></body>

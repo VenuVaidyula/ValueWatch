@@ -1,13 +1,30 @@
+/* ============================================================================
+   popup.css — Styling for the extension's toolbar popup
+
+   The popup window has a fixed width (Chrome doesn't autosize popups the way
+   a regular web page auto-sizes). We use system fonts and a compact spacing
+   scale to fit comfortably in a small overlay.
+   ============================================================================ */
+
+
+/* ---------- Base layout ---------- */
+
 body {
   font-family: system-ui, -apple-system, sans-serif;
-  width: 340px;
+  width: 340px;                 /* fixed popup width */
   margin: 0;
   padding: 12px;
   color: #1a1a1a;
 }
 h1 { font-size: 15px; margin: 0 0 10px; }
 
+
+/* ---------- Alert bar (shown when alertActive === true) ---------- */
+
+/* The `hidden` attribute in popup.html suppresses this until popup.js
+   removes it. Overriding display:none here matches HTML semantics. */
 #alert-bar[hidden] { display: none; }
+
 #alert-bar {
   background: #d00000;
   color: #fff;
@@ -17,13 +34,15 @@ h1 { font-size: 15px; margin: 0 0 10px; }
   display: flex;
   align-items: center;
   gap: 8px;
+  /* Pulsing background to draw attention — matches the in-page banner
+     drawn by content.js. */
   animation: pulse 1s ease-in-out infinite;
 }
 #alert-bar .alert-text {
   flex: 1;
   font-weight: 600;
   font-size: 13px;
-  word-break: break-word;
+  word-break: break-word;       /* prevent long values from overflowing */
 }
 #stop-alert {
   background: #fff;
@@ -35,10 +54,15 @@ h1 { font-size: 15px; margin: 0 0 10px; }
   cursor: pointer;
 }
 #stop-alert:hover { background: #ffe0e0; }
+
+/* Two-frame pulse: red ↔ lighter red. Same idea as the in-page banner. */
 @keyframes pulse {
   0%, 100% { background: #d00000; }
-  50% { background: #ff5252; }
+  50%      { background: #ff5252; }
 }
+
+
+/* ---------- Test-alert button (amber CTA) ---------- */
 
 .test-btn {
   width: 100%;
@@ -53,29 +77,69 @@ h1 { font-size: 15px; margin: 0 0 10px; }
 }
 .test-btn:hover { background: #ffa000; }
 
+
+/* ---------- Add-watch form ---------- */
+
 form { display: grid; gap: 6px; margin-bottom: 12px; }
+
 input {
-  padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; font: inherit;
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font: inherit;
 }
+/* Amber focus ring matches the CTA color for visual consistency. */
 input:focus { outline: 2px solid #ffb703; border-color: #ffb703; }
+
 form button {
-  padding: 6px 10px; background: #023047; color: white; border: none;
-  border-radius: 4px; cursor: pointer; font: inherit;
+  padding: 6px 10px;
+  background: #023047;          /* dark navy — the "primary" action color */
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font: inherit;
 }
 form button:hover { background: #045078; }
 
+
+/* ---------- Watch list ---------- */
+
 ul { list-style: none; padding: 0; margin: 0; }
+
+/* Each watch is a card with a subtle border. Absolute positioning is used
+   for the remove button in the top-right of the card. */
 li {
-  border: 1px solid #eee; border-radius: 4px; padding: 8px; margin-bottom: 6px;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  padding: 8px;
+  margin-bottom: 6px;
   position: relative;
 }
+
+/* Reserve space on the right so the label doesn't collide with the
+   absolute-positioned Remove button. */
 .label { font-weight: 600; font-size: 13px; padding-right: 60px; }
+
+/* URL pattern + selector — small, muted, and allowed to wrap anywhere
+   (word-break: break-all) since selectors often lack spaces. */
 .meta { font-size: 11px; color: #666; word-break: break-all; margin-top: 2px; }
+
+/* Last-seen value in monospace, in the accent color used elsewhere. */
 .value { font-family: ui-monospace, Menlo, monospace; font-size: 12px; margin-top: 4px; color: #023047; }
+
+/* Remove button pinned to the top-right of each card. */
 .remove {
-  position: absolute; top: 6px; right: 6px;
-  background: none; color: #d00; padding: 2px 6px; font-size: 11px;
-  border: none; cursor: pointer;
+  position: absolute;
+  top: 6px; right: 6px;
+  background: none;
+  color: #d00;
+  padding: 2px 6px;
+  font-size: 11px;
+  border: none;
+  cursor: pointer;
 }
 .remove:hover { background: #fee; }
+
+/* Empty-state message when the user has no watches yet. */
 .empty { color: #666; font-size: 12px; padding: 8px 0; }
